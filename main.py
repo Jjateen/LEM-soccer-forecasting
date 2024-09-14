@@ -51,8 +51,23 @@ class EventInput(BaseModel):
     home_score: float    # Home team's score normalized 0-1
     away_score: float    # Away team's score normalized 0-1
 
+# Match state to keep track of scores
+match_state = {
+    "home_score": 0,
+    "away_score": 0
+}
+
 # Prediction logic
 def predict_next_event(input_data: EventInput):
+    global match_state  # Access match state
+
+    # Update scores if the event is a goal (assuming event_type == 1 is a goal)
+    if input_data.event_type == 1:  # Assuming event_type 1 is a goal
+        if input_data.is_home_team:
+            match_state["home_score"] += 1
+        else:
+            match_state["away_score"] += 1
+
     # Original input tensor (8 features)
     input_tensor = torch.tensor([
         input_data.event_type, input_data.period, input_data.minute,
@@ -77,8 +92,21 @@ def predict_next_event(input_data: EventInput):
     event_acc_pred_sigmoid = torch.sigmoid(event_acc_pred)
 
     # We'll return both values of event_acc_pred (you can adjust as needed)
-    # For instance, returning the mean of both sigmoid outputs or the first one
     predicted_accuracy = event_acc_pred_sigmoid.mean().item()
+
+    # Calculate match result and goal difference
+    home_score = match_state["home_score"]
+    away_score = match_state["away_score"]
+
+    if home_score > away_score:
+        result = "Home Win"
+        goal_diff = home_score - away_score
+    elif home_score < away_score:
+        result = "Away Win"
+        goal_diff = away_score - home_score
+    else:
+        result = "Draw"
+        goal_diff = 0
 
     # Prepare the output
     output = {
@@ -87,6 +115,10 @@ def predict_next_event(input_data: EventInput):
         "predicted_x": event_data_pred[0].item(),
         "predicted_y": event_data_pred[1].item(),
         "predicted_time": event_data_pred[2].item(),
+        "home_score": home_score,
+        "away_score": away_score,
+        "match_result": result,
+        "goal_difference": goal_diff
     }
     return output
 
