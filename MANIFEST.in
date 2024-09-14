@@ -1,0 +1,23 @@
+# Include the README and other documentation files
+include README.md
+include requirements.txt
+include Dockerfile
+
+# Include Python files in the root, lib, and models directories
+recursive-include lib *.py
+recursive-include models *.pth
+recursive-include ScaledUP *.py *.ipynb
+
+# Include CSV and JSON data files from the wyscout dataset
+recursive-include data/wyscout/csv *.csv
+recursive-include data/wyscout/json *.json
+
+# Include Jupyter notebooks
+recursive-include . *.ipynb
+
+# Include Version file
+incude VERSION
+
+# Exclude __pycache__ and compiled python files
+global-exclude __pycache__/*
+global-exclude *.py[cod]
